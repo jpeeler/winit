@@ -107,7 +107,7 @@ pub trait EventLoopExtPumpEvents {
     fn pump_app_events<A: ApplicationHandler<Self::UserEvent>>(
         &mut self,
         timeout: Option<Duration>,
-        app: &mut A,
+        app: A,
     ) -> PumpStatus;
 }
 
@@ -117,7 +117,7 @@ impl<T> EventLoopExtPumpEvents for EventLoop<T> {
     fn pump_app_events<A: ApplicationHandler<Self::UserEvent>>(
         &mut self,
         timeout: Option<Duration>,
-        app: &mut A,
+        app: A,
     ) -> PumpStatus {
         self.event_loop.pump_app_events(timeout, app)
     }

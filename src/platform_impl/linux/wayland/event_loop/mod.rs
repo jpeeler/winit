@@ -174,13 +174,13 @@ impl<T: 'static> EventLoop<T> {
         Ok(event_loop)
     }
 
-    pub fn run_app<A: ApplicationHandler<T>>(mut self, app: &mut A) -> Result<(), EventLoopError> {
+    pub fn run_app<A: ApplicationHandler<T>>(mut self, app: A) -> Result<(), EventLoopError> {
         self.run_app_on_demand(app)
     }
 
     pub fn run_app_on_demand<A: ApplicationHandler<T>>(
         &mut self,
-        app: &mut A,
+        app: A,
     ) -> Result<(), EventLoopError> {
         let exit = loop {
             match self.pump_app_events(None, app) {
@@ -208,7 +208,7 @@ impl<T: 'static> EventLoop<T> {
     pub fn pump_app_events<A: ApplicationHandler<T>>(
         &mut self,
         timeout: Option<Duration>,
-        app: &mut A,
+        mut app: A,
     ) -> PumpStatus {
         if !self.loop_running {
             self.loop_running = true;

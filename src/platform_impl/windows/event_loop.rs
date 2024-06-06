@@ -216,7 +216,7 @@ impl<T: 'static> EventLoop<T> {
         &self.window_target
     }
 
-    pub fn run_app<A: ApplicationHandler<T>>(mut self, app: &mut A) -> Result<(), EventLoopError> {
+    pub fn run_app<A: ApplicationHandler<T>>(mut self, app: A) -> Result<(), EventLoopError> {
         self.run_app_on_demand(app)
     }
 

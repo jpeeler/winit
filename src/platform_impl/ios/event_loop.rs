@@ -109,10 +109,10 @@ impl OwnedDisplayHandle {
     }
 }
 
-fn map_user_event<T: 'static, A: ApplicationHandler<T>>(
-    app: &mut A,
+fn map_user_event<'app, T: 'static, A: ApplicationHandler<T> + 'app>(
+    mut app: A,
     receiver: mpsc::Receiver<T>,
-) -> impl FnMut(Event<HandlePendingUserEvents>, &RootActiveEventLoop) + '_ {
+) -> impl FnMut(Event<HandlePendingUserEvents>, &RootActiveEventLoop) + 'app {
     move |event, window_target| match event {
         Event::NewEvents(cause) => app.new_events(window_target, cause),
         Event::WindowEvent { window_id, event } => {
@@ -173,7 +173,7 @@ impl<T: 'static> EventLoop<T> {
         })
     }
 
-    pub fn run_app<A: ApplicationHandler<T>>(self, app: &mut A) -> ! {
+    pub fn run_app<A: ApplicationHandler<T>>(self, app: A) -> ! {
         let application: Option<Retained<UIApplication>> =
             unsafe { msg_send_id![UIApplication::class(), sharedApplication] };
         assert!(

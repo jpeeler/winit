@@ -201,7 +201,7 @@ impl<T: 'static> EventLoop<T> {
     fn single_iteration<A: ApplicationHandler<T>>(
         &mut self,
         main_event: Option<MainEvent<'_>>,
-        app: &mut A,
+        mut app: A,
     ) {
         trace!("Mainloop iteration");
 
@@ -357,7 +357,7 @@ impl<T: 'static> EventLoop<T> {
         &mut self,
         android_app: &AndroidApp,
         event: &InputEvent<'_>,
-        app: &mut A,
+        mut app: A,
     ) -> InputStatus {
         let mut input_status = InputStatus::Handled;
         match event {
@@ -460,13 +460,13 @@ impl<T: 'static> EventLoop<T> {
         input_status
     }
 
-    pub fn run_app<A: ApplicationHandler<T>>(mut self, app: &mut A) -> Result<(), EventLoopError> {
+    pub fn run_app<A: ApplicationHandler<T>>(mut self, app: A) -> Result<(), EventLoopError> {
         self.run_app_on_demand(app)
     }
 
     pub fn run_app_on_demand<A: ApplicationHandler<T>>(
         &mut self,
-        app: &mut A,
+        app: A,
     ) -> Result<(), EventLoopError> {
         loop {
             match self.pump_app_events(None, app) {
@@ -486,7 +486,7 @@ impl<T: 'static> EventLoop<T> {
     pub fn pump_app_events<A: ApplicationHandler<T>>(
         &mut self,
         timeout: Option<Duration>,
-        app: &mut A,
+        mut app: A,
     ) -> PumpStatus {
         if !self.loop_running {
             self.loop_running = true;
@@ -520,7 +520,7 @@ impl<T: 'static> EventLoop<T> {
     fn poll_events_with_timeout<A: ApplicationHandler<T>>(
         &mut self,
         mut timeout: Option<Duration>,
-        app: &mut A,
+        mut app: A,
     ) {
         let start = Instant::now();
 

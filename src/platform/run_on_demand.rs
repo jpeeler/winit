@@ -60,7 +60,7 @@ pub trait EventLoopExtRunOnDemand {
     /// [`set_control_flow()`]: ActiveEventLoop::set_control_flow()
     fn run_app_on_demand<A: ApplicationHandler<Self::UserEvent>>(
         &mut self,
-        app: &mut A,
+        app: A,
     ) -> Result<(), EventLoopError>;
 }
 
@@ -69,7 +69,7 @@ impl<T> EventLoopExtRunOnDemand for EventLoop<T> {
 
     fn run_app_on_demand<A: ApplicationHandler<Self::UserEvent>>(
         &mut self,
-        app: &mut A,
+        app: A,
     ) -> Result<(), EventLoopError> {
         self.event_loop.window_target().clear_exit();
         self.event_loop.run_app_on_demand(app)

@@ -156,10 +156,10 @@ impl ActiveEventLoop {
     }
 }
 
-fn map_user_event<T: 'static, A: ApplicationHandler<T>>(
-    app: &mut A,
+fn map_user_event<'a, T: 'static, A: ApplicationHandler<T> + 'a>(
+    mut app: A,
     receiver: Rc<mpsc::Receiver<T>>,
-) -> impl FnMut(Event<HandlePendingUserEvents>, &RootWindowTarget) + '_ {
+) -> impl FnMut(Event<HandlePendingUserEvents>, &RootWindowTarget) + 'a {
     move |event, window_target| match event {
         Event::NewEvents(cause) => app.new_events(window_target, cause),
         Event::WindowEvent { window_id, event } => {
@@ -272,7 +272,7 @@ impl<T> EventLoop<T> {
         &self.window_target
     }
 
-    pub fn run_app<A: ApplicationHandler<T>>(mut self, app: &mut A) -> Result<(), EventLoopError> {
+    pub fn run_app<A: ApplicationHandler<T>>(mut self, app: A) -> Result<(), EventLoopError> {
         self.run_app_on_demand(app)
     }
 
@@ -282,7 +282,7 @@ impl<T> EventLoop<T> {
     // redundant wake ups.
     pub fn run_app_on_demand<A: ApplicationHandler<T>>(
         &mut self,
-        app: &mut A,
+        app: A,
     ) -> Result<(), EventLoopError> {
         let handler = map_user_event(app, self.receiver.clone());
 
@@ -322,7 +322,7 @@ impl<T> EventLoop<T> {
     pub fn pump_app_events<A: ApplicationHandler<T>>(
         &mut self,
         timeout: Option<Duration>,
-        app: &mut A,
+        app: A,
     ) -> PumpStatus {
         let handler = map_user_event(app, self.receiver.clone());
 

@@ -328,7 +328,7 @@ impl<T: 'static> EventLoop<T> {
         event_option: EventOption,
         event_state: &mut EventState,
         window_target: &event_loop::ActiveEventLoop,
-        app: &mut A,
+        mut app: A,
     ) {
         match event_option {
             EventOption::Key(KeyEvent { character, scancode, pressed }) => {
@@ -500,7 +500,7 @@ impl<T: 'static> EventLoop<T> {
         }
     }
 
-    pub fn run_app<A: ApplicationHandler<T>>(mut self, app: &mut A) -> Result<(), EventLoopError> {
+    pub fn run_app<A: ApplicationHandler<T>>(mut self, mut app: A) -> Result<(), EventLoopError> {
         let mut start_cause = StartCause::Init;
         loop {
             app.new_events(&self.window_target, start_cause);

@@ -32,12 +32,12 @@ impl<T> EventLoop<T> {
         Ok(EventLoop { elw, user_event_sender, user_event_receiver })
     }
 
-    pub fn run_app<A: ApplicationHandler<T>>(self, app: &mut A) -> ! {
+    pub fn run_app<A: ApplicationHandler<T>>(self, app: A) -> ! {
         let target = RootActiveEventLoop { p: self.elw.p.clone(), _marker: PhantomData };
 
         // SAFETY: Don't use `move` to make sure we leak the `event_handler` and `target`.
         let handler: Box<dyn FnMut(Event<()>)> =
-            Box::new(|event| handle_event(app, &target, &self.user_event_receiver, event));
+            Box::new(move |event| handle_event(app, &target, &self.user_event_receiver, event));
 
         // SAFETY: The `transmute` is necessary because `run()` requires `'static`. This is safe
         // because this function will never return and all resources not cleaned up by the point we
@@ -54,13 +54,11 @@ impl<T> EventLoop<T> {
         unreachable!();
     }
 
-    pub fn spawn_app<A: ApplicationHandler<T> + 'static>(self, mut app: A) {
+    pub fn spawn_app<A: ApplicationHandler<T> + 'static>(self, app: A) {
         let target = RootActiveEventLoop { p: self.elw.p.clone(), _marker: PhantomData };
 
         self.elw.p.run(
-            Box::new(move |event| {
-                handle_event(&mut app, &target, &self.user_event_receiver, event)
-            }),
+            Box::new(move |event| handle_event(app, &target, &self.user_event_receiver, event)),
             true,
         );
     }
@@ -75,7 +73,7 @@ impl<T> EventLoop<T> {
 }
 
 fn handle_event<T: 'static, A: ApplicationHandler<T>>(
-    app: &mut A,
+    mut app: A,
     target: &RootActiveEventLoop,
     user_event_receiver: &Receiver<T>,
     event: Event<()>,
