@@ -11,14 +11,14 @@ use objc2_app_kit::{NSApplication, NSApplicationActivationPolicy, NSApplicationD
 use objc2_foundation::{MainThreadMarker, NSNotification, NSObject, NSObjectProtocol};
 
 use crate::application::ApplicationHandler;
-use crate::event::{DeviceEvent, StartCause, WindowEvent};
+use crate::event::{StartCause, WindowEvent};
 use crate::event_loop::{ActiveEventLoop as RootActiveEventLoop, ControlFlow};
 use crate::window::WindowId as RootWindowId;
 
 use super::event_handler::EventHandler;
 use super::event_loop::{stop_app_immediately, ActiveEventLoop, PanicInfo};
 use super::observer::{EventLoopWaker, RunLoop};
-use super::{menu, WindowId, DEVICE_ID};
+use super::{menu, WindowId};
 
 #[derive(Debug)]
 pub(super) struct AppState {
@@ -251,7 +251,10 @@ impl ApplicationDelegate {
     }
 
     #[track_caller]
-    pub fn maybe_queue_window_event(&self, window_id: WindowId, event: WindowEvent) {
+    pub fn maybe_queue_with_user_app(
+        &self,
+        callback: impl FnOnce(&mut dyn ApplicationHandler, &RootActiveEventLoop) + 'static,
+    ) {
         // Most programmer actions in AppKit (e.g. change window fullscreen, set focused, etc.)
         // result in an event being queued, and applied at a later point.
         //
@@ -259,40 +262,12 @@ impl ApplicationDelegate {
         // so to make sure that we don't encounter re-entrancy issues, we first check if we're
         // currently handling another event, and if we are, we queue the event instead.
         if !self.ivars().event_handler.in_use() {
-            self.with_user_app(|app, event_loop| {
-                app.window_event(event_loop, RootWindowId(window_id), event);
-            });
+            self.with_user_app(callback);
         } else {
-            tracing::debug!(
-                ?event,
-                "had to queue window event since another is currently being handled"
-            );
+            tracing::debug!("had to queue event since another is currently being handled");
             let this = self.retain();
             self.ivars().run_loop.queue_closure(move || {
-                this.with_user_app(|app, event_loop| {
-                    app.window_event(event_loop, RootWindowId(window_id), event);
-                })
-            });
-        }
-    }
-
-    #[track_caller]
-    pub fn maybe_queue_device_event(&self, event: DeviceEvent) {
-        // The same as in maybe_queue_window_event.
-        if !self.ivars().event_handler.in_use() {
-            self.with_user_app(|app, event_loop| {
-                app.device_event(event_loop, DEVICE_ID, event);
-            });
-        } else {
-            tracing::debug!(
-                ?event,
-                "had to queue device event since another is currently being handled"
-            );
-            let this = self.retain();
-            self.ivars().run_loop.queue_closure(move || {
-                this.with_user_app(|app, event_loop| {
-                    app.device_event(event_loop, DEVICE_ID, event);
-                })
+                this.with_user_app(callback);
             });
         }
     }

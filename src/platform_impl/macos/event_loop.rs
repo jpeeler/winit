@@ -236,7 +236,7 @@ impl EventLoop {
                 p: ActiveEventLoop { delegate, mtm },
                 _marker: PhantomData,
             },
-            user_wake_up: Arc::new(AtomicBool::new(false)),
+            user_wake_up,
             panic_info,
         })
     }
