@@ -763,6 +763,9 @@ pub enum NamedKey {
     /// This key is used enable the ISO Level 3 shift modifier (the standard `Shift` key is the
     /// level 2 modifier).
     AltGraph,
+    /// The ISO Level 5 shift modifier of `Shift`. Since there's no standard physical key mapping,
+    /// the key sym name is retained.
+    IsoLevel5Shift,
     /// The `Caps Lock` (Capital) key.
     ///
     /// Toggle capital character lock function for interpreting subsequent keyboard input event.
